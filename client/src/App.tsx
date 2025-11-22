@@ -13,6 +13,7 @@ import Itinerary from "./pages/Itinerary";
 import PlanB from "./pages/PlanB";
 import Nearby from "./pages/Nearby";
 import HiddenGems from "./pages/HiddenGems";
+import UploadPlace from "./pages/UploadPlace";
 import Login from "./pages/loginpage";
 import Account from "./pages/account";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/plan-b" component={PlanB} />
         <Route path="/nearby" component={Nearby} />
         <Route path="/hidden-gems" component={HiddenGems} />
+        <Route path="/upload-place" component={UploadPlace} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

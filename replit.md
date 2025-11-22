@@ -110,11 +110,12 @@ TripGenie is an AI-powered travel planning application that helps users create p
 
 ### Pages
 1. **Home** (`/`) - Trip planning input form with destination, budget, days, interests
-2. **Dashboard** (`/dashboard`) - Trip overview with destination, duration, budget cards
+2. **Dashboard** (`/dashboard`) - Trip overview with action buttons (View Itinerary, Plan B, Nearby Explorer)
 3. **Itinerary** (`/itinerary`) - Detailed day-by-day itinerary with shuffle & upvote buttons
 4. **Plan B** (`/plan-b`) - Indoor alternatives for bad weather + interactive chatbot mode
 5. **Nearby** (`/nearby`) - Nearby attractions and restaurants
-6. **Upload Place** (`/upload-place`) - Submit hidden travel gems with automatic verification
+6. **Hidden Gems** (`/hidden-gems`) - Community-submitted travel gems with upvotes and verification status
+7. **Upload Place** (`/upload-place`) - Submit hidden travel gems with automatic verification
 
 ## Features
 - AI-powered trip suggestions
@@ -137,11 +138,35 @@ TripGenie is an AI-powered travel planning application that helps users create p
 - Storage layer uses in-memory storage by default (can be switched to database)
 - All interactive elements have data-testid attributes for comprehensive testing
 
+## Complete Feature Implementation (November 22, 2025)
+- ✅ **Upload Place Page** - Full photo upload form with:
+  - Title and description fields
+  - Latitude/longitude input
+  - Photo upload with preview
+  - Form validation
+  - Real-time submission feedback
+- ✅ **Photo Storage** - Photos stored in `/uploads` directory with path in database
+- ✅ **Verification System**:
+  - EXIF GPS metadata extraction from photos
+  - Location accuracy check (500m radius)
+  - Reverse image search for originality detection
+  - AI fake detection to ensure authenticity
+  - Automatic status assignment: verified or pending_review
+- ✅ **Hidden Gems Display** - Community-submitted places shown with:
+  - Verification status badges
+  - Upvote functionality
+  - Photo display
+  - Location details
+  - Submission timestamps
+
 ## API Endpoints
-- `POST /api/places/submit` - Submit a new underrated place with automatic verification
-  - Accepts: multipart/form-data with title, description, latitude, longitude, image (optional)
-  - Returns: Place object with verification status and details
+- `POST /api/places/submit` - Submit a new hidden place with automatic verification
+  - Accepts: multipart/form-data with title, description, latitude, longitude, image
+  - Returns: Place object with verification status and detailed verification results
   - Verification includes: EXIF location check (500m), reverse image search, AI fake detection
+- `GET /api/places` - Retrieve all submitted places (verified and pending)
+- `GET /api/places/:id` - Get a specific place by ID
+- `POST /api/places/:id/upvote` - Upvote a hidden gem
 
 ## Technical Implementation Notes
 - **Photo Uploads**: Use FormData with native fetch (not apiRequest) to preserve browser-managed Content-Type headers
