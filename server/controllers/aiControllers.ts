@@ -6,9 +6,10 @@ import { mapsService } from "../services/mapsService";
 
 export const generateTripPlan = async (req: Request, res: Response) => {
   try {
-    console.log("📥 Received trip plan request:", JSON.stringify(req.body, null, 2));
+    console.log("\n=== TRIP PLAN REQUEST START ===");
+    console.log("📥 Request body:", JSON.stringify(req.body, null, 2));
     
-    // Geocode the destination to get coordinates
+    // Geocode the destination
     const destination = req.body.location?.city;
     if (destination) {
       console.log("📍 Geocoding destination:", destination);
@@ -16,7 +17,6 @@ export const generateTripPlan = async (req: Request, res: Response) => {
         const geocodeResult = await mapsService.geocode(destination);
         if (geocodeResult && geocodeResult.coordinates) {
           console.log("✅ Geocoding successful:", geocodeResult.coordinates);
-          // Add geotag to location
           req.body.location = {
             ...req.body.location,
             geotag: {
@@ -25,38 +25,40 @@ export const generateTripPlan = async (req: Request, res: Response) => {
             },
             address: geocodeResult.address || destination
           };
-        } else {
-          console.warn("⚠️ Geocoding failed or returned no results");
         }
       } catch (geocodeError: any) {
-        console.error("❌ Geocoding error:", geocodeError.message);
-        // Continue without coordinates
+        console.warn("⚠️ Geocoding failed:", geocodeError.message);
       }
     }
     
+    // Build prompt
     const prompt = buildTripPlannerPrompt(req.body);
-    console.log("📝 Generated prompt length:", prompt.length);
-    console.log("🤖 Calling AI service...");
+    console.log("📝 Prompt length:", prompt.length);
     
+    // Call AI
+    console.log("🤖 Calling AI service...");
     let response: string;
+    
     try {
       response = await tripGenieChat(prompt);
-      console.log("✅ AI service responded, length:", response.length);
-      console.log("📄 Response preview (first 500 chars):", response.substring(0, 500));
+      console.log("✅ AI service returned response");
+      console.log("📄 Response length:", response.length);
     } catch (aiError: any) {
       console.error("❌ AI service error:", aiError.message);
-      console.error("❌ AI service error stack:", aiError.stack);
       return res.status(500).json({
         success: false,
-        error: `AI service error: ${aiError.message}. Please try again.`
+        error: `AI service failed: ${aiError.message}. Please try again in a moment.`
       });
     }
     
-    let parsedData;
+    // Parse response
+    console.log("🔍 Parsing AI response...");
+    let parsedData: any;
+    
     try {
       parsedData = parseAIResponse(response);
-      console.log("✅ Successfully parsed AI response");
-      console.log("📊 Parsed data structure:", {
+      console.log("✅ Successfully parsed response");
+      console.log("📊 Data structure:", {
         hasDays: !!parsedData.days,
         daysCount: parsedData.days?.length || 0,
         hasCafes: !!parsedData.cafes,
@@ -65,82 +67,78 @@ export const generateTripPlan = async (req: Request, res: Response) => {
         hasTips: !!parsedData.tips
       });
     } catch (parseError: any) {
-      console.error("❌ JSON parse error:", parseError.message);
-      console.error("📄 Full AI response:", response);
-      console.error("📄 Response length:", response.length);
-      console.error("📄 First 2000 chars:", response.substring(0, 2000));
-      console.error("📄 Last 1000 chars:", response.substring(Math.max(0, response.length - 1000)));
-      console.error("📄 Response starts with:", response.substring(0, 100));
-      console.error("📄 Response ends with:", response.substring(Math.max(0, response.length - 100)));
-      
+      console.error("❌ Parse error:", parseError.message);
       return res.status(500).json({
         success: false,
-        error: `AI returned invalid JSON format: ${parseError.message}. Please try again.`,
-        debug: process.env.NODE_ENV === "development" ? {
-          responsePreview: response.substring(0, 2000),
-          responseLength: response.length,
-          startsWith: response.substring(0, 100),
-          endsWith: response.substring(Math.max(0, response.length - 100)),
-          parseError: parseError.message
-        } : undefined
+        error: `Failed to parse AI response: ${parseError.message}. Please try again.`
       });
     }
     
-    // Validate the parsed data structure
-    if (!parsedData.days || !Array.isArray(parsedData.days)) {
-      console.error("❌ Invalid data structure - missing days array");
+    // Validate structure
+    if (!parsedData.days || !Array.isArray(parsedData.days) || parsedData.days.length === 0) {
+      console.error("❌ Invalid structure - missing or empty days array");
       return res.status(500).json({
         success: false,
-        error: "AI response missing required 'days' array. Please try again."
+        error: "AI response is missing trip days. Please try again."
       });
     }
+    
+    // Ensure all required fields exist
+    if (!parsedData.cafes) parsedData.cafes = [];
+    if (!parsedData.medical) parsedData.medical = [];
+    if (!parsedData.tips) parsedData.tips = [];
+    
+    console.log("✅ Validation passed");
+    console.log("=== TRIP PLAN REQUEST COMPLETE ===\n");
     
     res.json({
       success: true,
       data: parsedData
     });
+    
   } catch (error: any) {
-    console.error("Trip plan generation error:", error);
+    console.error("\n❌ TRIP PLAN ERROR:", error.message);
+    console.error("Stack:", error.stack);
+    console.error("=== TRIP PLAN REQUEST FAILED ===\n");
+    
     res.status(500).json({
       success: false,
-      error: error.message || "Failed to generate trip plan"
+      error: error.message || "Failed to generate trip plan. Please try again."
     });
   }
 };
 
 export const shufflePlace = async (req: Request, res: Response) => {
   try {
+    console.log("\n=== SHUFFLE REQUEST START ===");
+    console.log("📥 Request:", JSON.stringify(req.body, null, 2));
+    
     const prompt = buildShufflePrompt(req.body);
+    console.log("📝 Prompt length:", prompt.length);
+    
+    console.log("🤖 Calling AI...");
     const response = await tripGenieChat(prompt);
+    console.log("✅ AI responded");
     
-    let parsedData;
-    try {
-      parsedData = parseAIResponse(response);
-      console.log("✅ Successfully parsed shuffle response");
-    } catch (parseError: any) {
-      console.error("❌ JSON parse error:", parseError.message);
-      console.error("📄 Full AI response:", response);
-      return res.status(500).json({
-        success: false,
-        error: `AI returned invalid JSON format: ${parseError.message}. Please try again.`
-      });
-    }
+    console.log("🔍 Parsing...");
+    const parsedData = parseAIResponse(response);
+    console.log("✅ Parsed successfully");
     
-    // Validate the parsed data structure
     if (!parsedData.new_place) {
-      console.error("❌ Invalid data structure - missing new_place");
-      return res.status(500).json({
-        success: false,
-        error: "AI response missing required 'new_place' field. Please try again."
-      });
+      throw new Error("AI response missing 'new_place' field");
     }
+    
+    console.log("=== SHUFFLE REQUEST COMPLETE ===\n");
     
     res.json({
       success: true,
       data: parsedData
     });
+    
   } catch (error: any) {
-    console.error("Shuffle error:", error);
+    console.error("\n❌ SHUFFLE ERROR:", error.message);
+    console.error("=== SHUFFLE REQUEST FAILED ===\n");
+    
     res.status(500).json({
       success: false,
       error: error.message || "Failed to shuffle place"
@@ -150,16 +148,23 @@ export const shufflePlace = async (req: Request, res: Response) => {
 
 export const chatWithAI = async (req: Request, res: Response) => {
   try {
+    console.log("\n=== CHAT REQUEST START ===");
     const { message, context } = req.body;
+    
     const prompt = buildChatPrompt(message, context);
     const response = await tripGenieChat(prompt);
+    
+    console.log("=== CHAT REQUEST COMPLETE ===\n");
     
     res.json({
       success: true,
       data: { message: response }
     });
+    
   } catch (error: any) {
-    console.error("Chat error:", error);
+    console.error("\n❌ CHAT ERROR:", error.message);
+    console.error("=== CHAT REQUEST FAILED ===\n");
+    
     res.status(500).json({
       success: false,
       error: error.message || "Failed to process chat"
