@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import Groq from "groq-sdk";
 
 dotenv.config();
 
@@ -65,11 +66,17 @@ ALL FIELDS ARE MANDATORY. USE REAL PLACE NAMES.
 ====================================================
 `;
 
-// Initialize Gemini client
-if (process.env.GEMINI_API_KEY) {
-  console.log("✅ Gemini client initialized (using REST API)");
+// Initialize Groq client
+let groq: Groq | null = null;
+if (process.env.GROQ_API_KEY) {
+  try {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    console.log("✅ Groq client initialized (FREE AI - No paid API needed!)");
+  } catch (error) {
+    console.error("❌ Failed to initialize Groq client:", error);
+  }
 } else {
-  console.error("❌ GEMINI_API_KEY not found in environment variables");
+  console.error("❌ GROQ_API_KEY not found in environment variables");
 }
 
 /**
@@ -103,80 +110,50 @@ function extractAndCleanJSON(text: string): string {
   // Remove control characters but keep newlines in strings
   cleaned = cleaned.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, '');
   
-  // Fix common issues with escaped characters
-  cleaned = cleaned.replace(/\\/g, '\\\\').replace(/\\\\"/g, '\\"').replace(/\\\\n/g, '\\n');
-  
   console.log("✅ Cleaning complete");
   return cleaned;
 }
 
 /**
- * Get response from Gemini API using direct REST endpoint
+ * Get response from Groq API
  */
-async function getGeminiResponse(userMessage: any): Promise<string> {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("Gemini API key not configured. Please set GEMINI_API_KEY in environment variables.");
+async function getGroqResponse(userMessage: any): Promise<string> {
+  if (!groq || !process.env.GROQ_API_KEY) {
+    throw new Error("Groq API key not configured. Please set GROQ_API_KEY in environment variables.");
   }
 
   try {
-    console.log("🤖 Calling Gemini API via REST endpoint");
+    console.log("🤖 Calling Groq API (FREE!)");
     
     // Build prompt with VERY explicit JSON instructions
     const jsonInstruction = `\n\n**CRITICAL**: Return ONLY valid JSON. No text before or after. No markdown. Just the JSON object starting with { and ending with }.`;
     const fullPrompt = `${SYSTEM_PROMPT}\n\nUser Request:\n${typeof userMessage === 'string' ? userMessage : JSON.stringify(userMessage)}${jsonInstruction}`;
     
-    console.log("✅ Using gemini-2.5-flash model via REST API");
+    console.log("✅ Using mixtral-8x7b-32768 model (Groq - FREE)");
     
-    // Call Gemini API directly via REST endpoint
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
-    
-    const requestBody = {
-      contents: [
+    const message = await groq.chat.completions.create({
+      messages: [
         {
-          parts: [
-            {
-              text: fullPrompt
-            }
-          ]
-        }
+          role: "user",
+          content: fullPrompt,
+        },
       ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 4096
-      }
-    };
-    
-    console.log("📤 Sending prompt to Gemini REST API");
-    
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
+      model: "mixtral-8x7b-32768",
+      temperature: 0.2,
+      max_tokens: 8192,
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Gemini API HTTP Error:", response.status, errorData);
-      throw new Error(`Gemini API HTTP ${response.status}: ${JSON.stringify(errorData)}`);
-    }
+    console.log("📤 Sent prompt to Groq");
     
-    const data = await response.json();
-    console.log("📥 Received response from Gemini");
+    let content = message.choices[0]?.message?.content || "";
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error("Invalid response structure from Gemini API");
-    }
-    
-    let content = data.candidates[0].content.parts[0].text;
-    
+    console.log("📥 Received response from Groq");
     console.log("📄 Raw response length:", content.length);
     console.log("📄 First 500 chars:", content.substring(0, 500));
     console.log("📄 Last 200 chars:", content.substring(Math.max(0, content.length - 200)));
     
     if (!content || content.trim().length === 0) {
-      throw new Error("Gemini returned empty response");
+      throw new Error("Groq returned empty response");
     }
     
     // Clean and extract JSON
@@ -215,21 +192,21 @@ async function getGeminiResponse(userMessage: any): Promise<string> {
       }
     }
   } catch (error: any) {
-    console.error("❌ Gemini API Error:", error.message);
-    throw new Error(`Gemini API error: ${error.message}`);
+    console.error("❌ Groq API Error:", error.message);
+    throw new Error(`Groq API error: ${error.message}`);
   }
 }
 
 export async function tripGenieChat(userMessage: any): Promise<string> {
-  // Check if Gemini API key is configured
-  if (!process.env.GEMINI_API_KEY) {
-    const errorMsg = "❌ GEMINI_API_KEY not configured! Please set GEMINI_API_KEY in environment variables.";
+  // Check if Groq API key is configured
+  if (!process.env.GROQ_API_KEY) {
+    const errorMsg = "❌ GROQ_API_KEY not configured! Please set GROQ_API_KEY in environment variables.";
     console.error(errorMsg);
-    throw new Error("GEMINI_API_KEY not configured. Please set it in your .env file.");
+    throw new Error("GROQ_API_KEY not configured. Please set it in your .env file.");
   }
 
-  console.log("🚀 Starting TripGenie chat");
-  const response = await getGeminiResponse(userMessage);
+  console.log("🚀 Starting TripGenie chat with Groq (FREE)");
+  const response = await getGroqResponse(userMessage);
   console.log("✅ TripGenie chat complete");
   return response;
 }
