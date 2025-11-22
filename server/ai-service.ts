@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -67,14 +66,8 @@ ALL FIELDS ARE MANDATORY. USE REAL PLACE NAMES.
 `;
 
 // Initialize Gemini client
-let gemini: GoogleGenerativeAI | null = null;
 if (process.env.GEMINI_API_KEY) {
-  try {
-    gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    console.log("✅ Gemini client initialized");
-  } catch (error) {
-    console.error("❌ Failed to initialize Gemini client:", error);
-  }
+  console.log("✅ Gemini client initialized (using REST API)");
 } else {
   console.error("❌ GEMINI_API_KEY not found in environment variables");
 }
@@ -118,38 +111,66 @@ function extractAndCleanJSON(text: string): string {
 }
 
 /**
- * Get response from Gemini API
+ * Get response from Gemini API using direct REST endpoint
  */
 async function getGeminiResponse(userMessage: any): Promise<string> {
-  if (!gemini || !process.env.GEMINI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     throw new Error("Gemini API key not configured. Please set GEMINI_API_KEY in environment variables.");
   }
 
   try {
-    console.log("🤖 Calling Gemini API");
-    
-    // Use gemini-2.5-flash (stable Gemini 2.5 Flash model)
-    const model = gemini.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
-      generationConfig: {
-        temperature: 0.2,
-        // Remove responseMimeType to get more reliable responses
-      }
-    });
-    
-    console.log("✅ Using gemini-2.5-flash model");
+    console.log("🤖 Calling Gemini API via REST endpoint");
     
     // Build prompt with VERY explicit JSON instructions
     const jsonInstruction = `\n\n**CRITICAL**: Return ONLY valid JSON. No text before or after. No markdown. Just the JSON object starting with { and ending with }.`;
     const fullPrompt = `${SYSTEM_PROMPT}\n\nUser Request:\n${typeof userMessage === 'string' ? userMessage : JSON.stringify(userMessage)}${jsonInstruction}`;
     
-    console.log("📤 Sending prompt to Gemini");
+    console.log("✅ Using gemini-2.5-flash model via REST API");
     
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    let content = response.text();
+    // Call Gemini API directly via REST endpoint
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
     
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: fullPrompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 4096
+      }
+    };
+    
+    console.log("📤 Sending prompt to Gemini REST API");
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Gemini API HTTP Error:", response.status, errorData);
+      throw new Error(`Gemini API HTTP ${response.status}: ${JSON.stringify(errorData)}`);
+    }
+    
+    const data = await response.json();
     console.log("📥 Received response from Gemini");
+    
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error("Invalid response structure from Gemini API");
+    }
+    
+    let content = data.candidates[0].content.parts[0].text;
+    
     console.log("📄 Raw response length:", content.length);
     console.log("📄 First 500 chars:", content.substring(0, 500));
     console.log("📄 Last 200 chars:", content.substring(Math.max(0, content.length - 200)));
