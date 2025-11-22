@@ -200,3 +200,70 @@ ${context ? `Context: ${JSON.stringify(context)}` : ''}
 Respond as TripGenie PRO MAX with helpful travel advice.
 `;
 };
+
+export const buildItineraryAdjustmentPrompt = (request: any) => {
+  const { userMessage, currentItinerary, location, userPreferences } = request;
+  
+  return `
+USER SITUATION: "${userMessage}"
+
+CURRENT ITINERARY for ${location.city}:
+${JSON.stringify(currentItinerary, null, 2)}
+
+USER PREFERENCES:
+- Interests: ${userPreferences.interests.join(', ')}
+- Budget: ${userPreferences.budget}
+- Pace: ${userPreferences.pace}
+
+TASK: Based on the user's situation (missed something, woke up late, wants to change activities, etc.):
+1. Acknowledge their situation
+2. Suggest REAL adjustments to the itinerary
+3. Keep recommendations from ${location.city} only
+4. Return updated itinerary in the same format as the original
+
+CRITICAL JSON OUTPUT REQUIREMENTS:
+1. Return ONLY valid JSON - no text before/after
+2. Start with { and end with }
+3. Use double quotes for all strings
+4. NO markdown code blocks
+
+REQUIRED JSON STRUCTURE (same as original itinerary):
+{
+  "acknowledgment": "Brief acknowledgment of user's situation",
+  "recommendation": "What we recommend to do",
+  "days": [
+    {
+      "day": 1,
+      "places": [
+        {
+          "name": "Real Place Name",
+          "type": "attraction",
+          "description": "Description",
+          "timing": "10 AM to 2 PM",
+          "transport": "Cab",
+          "distance": "2.5 km"
+        }
+      ]
+    }
+  ],
+  "cafes": [
+    {
+      "name": "Real Cafe Name",
+      "vibe": "Cozy casual",
+      "price": "₹500-800",
+      "bestDish": "Signature dish",
+      "distance": "1.2 km"
+    }
+  ],
+  "medical": ["Medical Store Name - Address"],
+  "tips": ["Travel tip here"]
+}
+
+IMPORTANT:
+- Use only REAL places from ${location.city}
+- Adjust activities based on user's situation (missed items, late wake-up, etc.)
+- Keep the same structure as the original itinerary
+- Provide meaningful changes, not just the same itinerary
+- Make practical suggestions
+`;
+};

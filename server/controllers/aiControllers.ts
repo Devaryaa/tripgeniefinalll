@@ -171,3 +171,84 @@ export const chatWithAI = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const adjustItinerary = async (req: Request, res: Response) => {
+  try {
+    console.log("\n=== ITINERARY ADJUSTMENT REQUEST START ===");
+    console.log("📥 Request:", JSON.stringify(req.body, null, 2));
+    
+    const { userMessage, currentItinerary, location, userPreferences } = req.body;
+    
+    if (!userMessage || !currentItinerary || !location) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: userMessage, currentItinerary, location"
+      });
+    }
+    
+    // Import here to avoid circular dependencies
+    const { buildItineraryAdjustmentPrompt } = await import("../ai/promptTemplates");
+    
+    const prompt = buildItineraryAdjustmentPrompt(req.body);
+    console.log("📝 Prompt length:", prompt.length);
+    
+    console.log("🤖 Calling AI service...");
+    let response: string;
+    
+    try {
+      response = await tripGenieChat(prompt);
+      console.log("✅ AI service returned response");
+      console.log("📄 Response length:", response.length);
+    } catch (aiError: any) {
+      console.error("❌ AI service error:", aiError.message);
+      return res.status(500).json({
+        success: false,
+        error: `AI service failed: ${aiError.message}`
+      });
+    }
+    
+    console.log("🔍 Parsing AI response...");
+    let parsedData: any;
+    
+    try {
+      parsedData = parseAIResponse(response);
+      console.log("✅ Successfully parsed response");
+      console.log("📊 Data structure:", {
+        hasAcknowledgment: !!parsedData.acknowledgment,
+        hasRecommendation: !!parsedData.recommendation,
+        hasDays: !!parsedData.days,
+        daysCount: parsedData.days?.length || 0
+      });
+    } catch (parseError: any) {
+      console.error("❌ Parse error:", parseError.message);
+      return res.status(500).json({
+        success: false,
+        error: `Failed to parse AI response: ${parseError.message}`
+      });
+    }
+    
+    // Ensure all required fields exist
+    if (!parsedData.days) parsedData.days = [];
+    if (!parsedData.cafes) parsedData.cafes = [];
+    if (!parsedData.medical) parsedData.medical = [];
+    if (!parsedData.tips) parsedData.tips = [];
+    
+    console.log("✅ Validation passed");
+    console.log("=== ITINERARY ADJUSTMENT REQUEST COMPLETE ===\n");
+    
+    res.json({
+      success: true,
+      data: parsedData
+    });
+    
+  } catch (error: any) {
+    console.error("\n❌ ADJUSTMENT ERROR:", error.message);
+    console.error("Stack:", error.stack);
+    console.error("=== ADJUSTMENT REQUEST FAILED ===\n");
+    
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to adjust itinerary"
+    });
+  }
+};

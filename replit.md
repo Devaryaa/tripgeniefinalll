@@ -87,11 +87,32 @@ TripGenie is an AI-powered travel planning application that helps users create p
   - "Shuffle Lunch Options" button randomizes restaurant display
   - All buttons show pending state while processing
 
+### Plan B Chatbot Mode (November 22, 2025)
+- ✅ **Interactive Chatbot on Plan B Page**:
+  - New "Chat Mode" button to toggle between indoor alternatives and chatbot
+  - Real-time chat interface with message history
+  - User can describe what happened (missed activities, woke up late, etc.)
+  - Chatbot adjusts the entire itinerary based on user input
+  - Shows updated day-by-day schedule with new recommendations
+- ✅ **Backend Itinerary Adjustment Endpoint**:
+  - `/api/ai/adjust-itinerary` endpoint processes user situations
+  - Takes current itinerary, user preferences, and situation description
+  - Returns AI-generated adjusted itinerary in same format
+  - Includes acknowledgment and recommendation from the AI
+  - All recommendations constrained to destination city
+- ✅ **Chat Features**:
+  - Message display with sender identification (user/assistant)
+  - Timestamps on all messages
+  - Auto-scroll to latest messages
+  - Real-time loading state while AI processes
+  - Displays adjusted itinerary with day-wise activities and timings
+  - Clean UI with message bubbles and organized layout
+
 ### Pages
 1. **Home** (`/`) - Trip planning input form with destination, budget, days, interests
 2. **Dashboard** (`/dashboard`) - Trip overview with destination, duration, budget cards
-3. **Itinerary** (`/itinerary`) - Detailed day-by-day itinerary
-4. **Plan B** (`/plan-b`) - Indoor alternatives for bad weather
+3. **Itinerary** (`/itinerary`) - Detailed day-by-day itinerary with shuffle & upvote buttons
+4. **Plan B** (`/plan-b`) - Indoor alternatives for bad weather + interactive chatbot mode
 5. **Nearby** (`/nearby`) - Nearby attractions and restaurants
 6. **Upload Place** (`/upload-place`) - Submit hidden travel gems with automatic verification
 
