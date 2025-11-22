@@ -71,7 +71,7 @@ app.use((req, res, next) => {
       }
     );
 
-    const PORT = process.env.PORT || 5000;
+    const PORT = parseInt(process.env.PORT || "5000", 10);
     const NODE_ENV = process.env.NODE_ENV || "development";
 
     // DEV: Run Vite Dev Server
