@@ -59,6 +59,7 @@ export const attractionSchema = z.object({
   rating: z.number().min(0).max(5),
   reviews: z.number().min(0),
   category: z.string(),
+  day: z.number(),
   upvotes: z.number().default(0),
 });
 

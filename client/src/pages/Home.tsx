@@ -129,6 +129,7 @@ const Home = () => {
                 rating: 4.5, // Default rating
                 reviews: 100, // Default reviews count
                 category: place.type || "attraction",
+                day: day.day, // Include the day number!
               }),
             });
           }
