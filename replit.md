@@ -63,6 +63,13 @@ TripGenie is an AI-powered travel planning application that helps users create p
 - ✅ Removed hardcoded API keys from client/index.html for security
 - ✅ Application successfully running on port 5000 with all features operational
 
+### AI Service Migration (November 22, 2025)
+- ✅ Switched from Gemini API to Groq (FREE, no paid API needed)
+- ✅ Updated AI service to use Groq SDK with llama-3.3-70b-versatile model
+- ✅ Configured GROQ_API_KEY in Replit Secrets for automatic loading
+- ✅ All trip planning now using Groq's fast, free inference
+- ✅ Removed Google Generative AI dependency from code
+
 ### Pages
 1. **Home** (`/`) - Trip planning input form with destination, budget, days, interests
 2. **Dashboard** (`/dashboard`) - Trip overview with destination, duration, budget cards

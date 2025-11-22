@@ -129,7 +129,7 @@ async function getGroqResponse(userMessage: any): Promise<string> {
     const jsonInstruction = `\n\n**CRITICAL**: Return ONLY valid JSON. No text before or after. No markdown. Just the JSON object starting with { and ending with }.`;
     const fullPrompt = `${SYSTEM_PROMPT}\n\nUser Request:\n${typeof userMessage === 'string' ? userMessage : JSON.stringify(userMessage)}${jsonInstruction}`;
     
-    console.log("✅ Using llama-3.1-70b-versatile model (Groq - FREE)");
+    console.log("✅ Using llama-3.3-70b-versatile model (Groq - FREE)");
     
     const message = await groq.chat.completions.create({
       messages: [
@@ -138,7 +138,7 @@ async function getGroqResponse(userMessage: any): Promise<string> {
           content: fullPrompt,
         },
       ],
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.2,
       max_tokens: 8192,
     });
