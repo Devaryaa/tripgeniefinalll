@@ -53,8 +53,10 @@ build = ["npm", "run", "build"]
 [userenv]
 
 [userenv.development]
-GEMINI_API_KEY = "AIzaSyAo_WuSBM1AHsCxZHW_3xNf07373qZMW2E"
 GOOGLE_MAPS_API_KEY = "AIzaSyAc5QNW7fuQzAEStLJT8mmfcnE900_OGfs"
 PORT = "5000"
 NODE_ENV = "development"
 CLIENT_URL = "http://localhost:3000"
+
+[userenv.shared]
+GEMINI_API_KEY = "AIzaSyBAnN988iHj7DaDgGozIn1IYrL22PDy5Vk"
