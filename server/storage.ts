@@ -46,9 +46,10 @@ export interface IStorage {
   getIndoorAlternatives(tripId: number): Promise<IndoorPlace[]>;
 
   // Underrated place operations
-  createUnderratedPlace(place: Omit<UnderratedPlace, "id" | "createdAt">): Promise<UnderratedPlace>;
+  createUnderratedPlace(place: Omit<UnderratedPlace, "id" | "createdAt" | "upvotes">): Promise<UnderratedPlace>;
   getUnderratedPlaces(): Promise<UnderratedPlace[]>;
   getUnderratedPlace(id: number): Promise<UnderratedPlace | null>;
+  upvoteUnderratedPlace(id: number): Promise<UnderratedPlace>;
 }
 
 // In-memory storage implementation
@@ -246,10 +247,11 @@ class MemStorage implements IStorage {
   }
 
   // Underrated place operations
-  async createUnderratedPlace(place: Omit<UnderratedPlace, "id" | "createdAt">): Promise<UnderratedPlace> {
+  async createUnderratedPlace(place: Omit<UnderratedPlace, "id" | "createdAt" | "upvotes">): Promise<UnderratedPlace> {
     const newPlace: UnderratedPlace = {
       ...place,
       id: this.underratedPlaceIdCounter++,
+      upvotes: 0,
       createdAt: new Date(),
     };
     this.underratedPlaces.set(newPlace.id, newPlace);
@@ -263,6 +265,15 @@ class MemStorage implements IStorage {
   async getUnderratedPlace(id: number): Promise<UnderratedPlace | null> {
     return this.underratedPlaces.get(id) || null;
   }
+
+  async upvoteUnderratedPlace(id: number): Promise<UnderratedPlace> {
+    const place = this.underratedPlaces.get(id);
+    if (!place) throw new Error("Underrated place not found");
+    place.upvotes = (place.upvotes || 0) + 1;
+    return place;
+  }
 }
 
-export const storage: IStorage = new MemStorage();
+// Export DbStorage as the default storage implementation
+import { storage as dbStorage } from './dbStorage';
+export const storage: IStorage = dbStorage;

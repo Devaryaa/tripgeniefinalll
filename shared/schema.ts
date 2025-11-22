@@ -123,11 +123,12 @@ export const underratedPlaceSchema = z.object({
   exifDistance: z.number().optional(),
   reverseImageFound: z.boolean().optional(),
   aiFakeScore: z.number().min(0).max(100).optional(),
+  upvotes: z.number().default(0),
   createdAt: z.date().optional(),
 });
 
 export type UnderratedPlace = z.infer<typeof underratedPlaceSchema>;
-export type InsertUnderratedPlace = Omit<UnderratedPlace, "id" | "createdAt" | "status">;
+export type InsertUnderratedPlace = Omit<UnderratedPlace, "id" | "createdAt" | "status" | "upvotes">;
 
 export const placeSubmissionSchema = z.object({
   title: z.string().min(1),

@@ -392,6 +392,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Upvote a place
+  app.post("/api/places/:id/upvote", async (req, res) => {
+    try {
+      const place = await storage.upvoteUnderratedPlace(parseInt(req.params.id));
+      res.json(place);
+    } catch (error: any) {
+      res.status(404).json({ message: error.message });
+    }
+  });
+
   // Catch-all
   app.use((req, res, next) => {
     if (req.path.startsWith("/api")) {

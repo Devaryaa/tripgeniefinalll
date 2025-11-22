@@ -7,7 +7,6 @@
     "dev": "NODE_ENV=development tsx watch --clear-screen=false --ignore '**/*.timestamp-*.mjs' server/index.ts",
     "build": "vite build --outDir dist/public && tsc --project tsconfig.server.json --outDir dist",
     "start": "cross-env NODE_ENV=production node server/index.ts",
-
     "lint": "eslint ."
   },
   "dependencies": {
@@ -49,6 +48,7 @@
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "dotenv": "^16.0.3",
+    "drizzle-kit": "^0.31.7",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
     "embla-carousel-react": "^8.6.0",
@@ -61,6 +61,7 @@
     "multer": "^2.0.2",
     "next-themes": "^0.3.0",
     "openai": "^6.9.1",
+    "postgres": "^3.4.7",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

@@ -6,71 +6,88 @@ import { Search, MapPin, Star, DollarSign, ArrowUp, Shuffle, ExternalLink } from
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useTrip } from "@/context/TripContext";
+import { useToast } from "@/hooks/use-toast";
 
 const defaultMockPlaces = [
   {
+    id: 1,
     name: "Sacré-Cœur",
     category: "attractions",
     rating: 4.7,
     reviews: 8942,
     priceLevel: "Free",
     distance: "1.2 km",
+    upvotes: 42,
   },
   {
+    id: 2,
     name: "Le Marais",
     category: "attractions",
     rating: 4.6,
     reviews: 5621,
     priceLevel: "Free",
     distance: "2.1 km",
+    upvotes: 38,
   },
   {
+    id: 3,
     name: "L'Ami Jean",
     category: "food",
     rating: 4.8,
     reviews: 2847,
     priceLevel: "$$$",
     distance: "0.8 km",
+    upvotes: 56,
   },
   {
+    id: 4,
     name: "Bistrot Paul Bert",
     category: "food",
     rating: 4.7,
     reviews: 3214,
     priceLevel: "$$",
     distance: "1.5 km",
+    upvotes: 45,
   },
   {
+    id: 5,
     name: "Café de Flore",
     category: "cafes",
     rating: 4.5,
     reviews: 6789,
     priceLevel: "$$",
     distance: "0.6 km",
+    upvotes: 67,
   },
   {
+    id: 6,
     name: "Les Deux Magots",
     category: "cafes",
     rating: 4.4,
     reviews: 5432,
     priceLevel: "$$",
     distance: "0.7 km",
+    upvotes: 51,
   },
   {
+    id: 7,
     name: "Le Baron",
     category: "nightlife",
     rating: 4.3,
     reviews: 1847,
     priceLevel: "$$$",
     distance: "2.3 km",
+    upvotes: 29,
   },
   {
+    id: 8,
     name: "Rex Club",
     category: "nightlife",
     rating: 4.6,
     reviews: 2156,
     priceLevel: "$$",
     distance: "1.9 km",
+    upvotes: 34,
   },
 ];
 
@@ -86,6 +103,8 @@ const Nearby = () => {
   const [activeCategory, setActiveCategory] = useState("attractions");
   const [places, setPlaces] = useState(defaultMockPlaces);
   const [loading, setLoading] = useState(true);
+  const [upvotingIds, setUpvotingIds] = useState<Set<number>>(new Set());
+  const { toast } = useToast();
 
   useEffect(() => {
     loadPlaces();
@@ -106,6 +125,47 @@ const Nearby = () => {
       setPlaces(defaultMockPlaces);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpvote = async (placeId: number) => {
+    if (upvotingIds.has(placeId)) return;
+
+    setUpvotingIds(prev => new Set(prev).add(placeId));
+
+    try {
+      const res = await fetch(`/api/nearby/${placeId}/upvote`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to upvote');
+      }
+
+      const updatedPlace = await res.json();
+
+      setPlaces(prev =>
+        prev.map(place =>
+          place.id === placeId ? { ...place, upvotes: updatedPlace.upvotes } : place
+        )
+      );
+
+      toast({
+        title: "Upvoted!",
+        description: "Thanks for your feedback!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upvote. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpvotingIds(prev => {
+        const next = new Set(prev);
+        next.delete(placeId);
+        return next;
+      });
     }
   };
 
@@ -131,6 +191,7 @@ const Nearby = () => {
             <Input
               placeholder="Search places near destination"
               className="pl-10 h-12"
+              data-testid="input-search-places"
             />
           </div>
         </div>
@@ -142,7 +203,11 @@ const Nearby = () => {
         >
           <TabsList className="grid w-full grid-cols-4">
             {categories.map((category) => (
-              <TabsTrigger key={category.value} value={category.value}>
+              <TabsTrigger 
+                key={category.value} 
+                value={category.value}
+                data-testid={`tab-${category.value}`}
+              >
                 {category.label}
               </TabsTrigger>
             ))}
@@ -150,12 +215,12 @@ const Nearby = () => {
         </Tabs>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredPlaces.map((place, idx) => (
-            <Card key={idx} className="overflow-hidden hover:shadow-medium transition-shadow">
+          {filteredPlaces.map((place) => (
+            <Card key={place.id} className="overflow-hidden hover:shadow-medium transition-shadow" data-testid={`card-place-${place.id}`}>
               <div className="h-48 bg-gradient-to-br from-primary/20 to-primary/5" />
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-foreground text-lg">
+                  <h3 className="font-semibold text-foreground text-lg" data-testid={`text-place-name-${place.id}`}>
                     {place.name}
                   </h3>
                   <Badge variant="secondary">
@@ -177,15 +242,22 @@ const Nearby = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-1"
+                    onClick={() => handleUpvote(place.id)}
+                    disabled={upvotingIds.has(place.id)}
+                    data-testid={`button-upvote-${place.id}`}
+                  >
                     <ArrowUp className="h-3 w-3" />
-                    Upvote
+                    <span data-testid={`text-upvotes-${place.id}`}>{place.upvotes || 0}</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 gap-1">
+                  <Button variant="outline" size="sm" className="flex-1 gap-1" data-testid="button-shuffle">
                     <Shuffle className="h-3 w-3" />
                     Shuffle
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-1">
+                  <Button variant="outline" size="sm" className="gap-1" data-testid="button-external">
                     <ExternalLink className="h-3 w-3" />
                   </Button>
                 </div>
@@ -195,7 +267,7 @@ const Nearby = () => {
         </div>
 
         <div className="mt-8 text-center">
-          <Button size="lg" className="gap-2">
+          <Button size="lg" className="gap-2" data-testid="button-open-maps">
             <ExternalLink className="h-5 w-5" />
             Open in Maps
           </Button>
