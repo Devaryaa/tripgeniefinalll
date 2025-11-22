@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TripProvider } from "./context/TripContext";
+import { AuthProvider } from "./context/AuthContext";
 import Layout from "./pages/Layout";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
@@ -35,13 +36,15 @@ function Router() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TripProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Router />
-        </TooltipProvider>
-      </TripProvider>
+      <AuthProvider>
+        <TripProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Router />
+          </TooltipProvider>
+        </TripProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

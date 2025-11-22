@@ -43,7 +43,7 @@ You MUST return ONLY valid JSON that can be directly parsed by JSON.parse().
 ABSOLUTE RULES:
 1. Start with { and end with } - NO other text before or after
 2. Use double quotes for ALL strings and keys (not single quotes)
-3. NO markdown code blocks (no ```json``` or ```)
+3. NO markdown code blocks (no backticks or code fences)
 4. NO explanations, comments, or any text outside the JSON
 5. NO trailing commas before } or ]
 6. Escape special characters in strings (use \\n for newlines, \\" for quotes)
@@ -175,12 +175,8 @@ EXAMPLE OF CORRECT OUTPUT:
 {"new_place":"Place Name","description":"Reason here"}
 
 EXAMPLE OF WRONG OUTPUT (DO NOT DO THIS):
-```json
-{"new_place":"..."}
-```
-or
-Here is the replacement:
-{"new_place":"..."}
+Adding any text or code blocks before or after the JSON.
+Just return pure JSON with no formatting.
 
 Return ONLY this JSON (nothing else):
 {
