@@ -161,7 +161,7 @@ const Home = () => {
       // Update trip context
       setCurrentTrip(trip);
       toast.success("✨ Your AI-powered trip plan is ready!");
-      setLocation("/itinerary");
+      setLocation("/dashboard");
     } catch (error: any) {
       console.error("Trip generation error:", error);
       toast.error(error.message || "Failed to create trip. Please try again.");
