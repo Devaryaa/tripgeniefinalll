@@ -128,16 +128,16 @@ async function getGeminiResponse(userMessage: any): Promise<string> {
   try {
     console.log("🤖 Calling Gemini API");
     
-    // Use gemini-2.0-flash-exp (Gemini 2.0 Flash experimental)
+    // Use gemini-2.5-flash-live
     const model = gemini.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash-live",
       generationConfig: {
         temperature: 0.2,
         // Remove responseMimeType to get more reliable responses
       }
     });
     
-    console.log("✅ Using gemini-2.0-flash-exp model");
+    console.log("✅ Using gemini-2.5-flash-live model");
     
     // Build prompt with VERY explicit JSON instructions
     const jsonInstruction = `\n\n**CRITICAL**: Return ONLY valid JSON. No text before or after. No markdown. Just the JSON object starting with { and ending with }.`;
