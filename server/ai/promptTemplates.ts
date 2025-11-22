@@ -154,35 +154,40 @@ export const buildShufflePrompt = (request: any) => {
   const { placeName, placeType, location, userPreferences, visited = [], previouslyShown = [] } = request;
   
   return `
-Replace this place: "${placeName}" (type: ${placeType})
+SHUFFLE RECOMMENDATION - Find Alternative
 
-REQUIREMENTS:
-- Same category/type as original
-- Located in ${location.city} or nearby
+ORIGINAL PLACE:
+- Name: "${placeName}"
+- Type: ${placeType}
+
+REPLACEMENT MUST BE:
+- Same type/category as original (${placeType})
+- Located IN ${location.city} ONLY (REAL place that actually exists)
 - Match user interests: ${userPreferences.interests.join(', ')}
-- Different vibe but relevant
-- NOT these places: ${[placeName, ...visited, ...previouslyShown].join(', ')}
+- NOT already visited: ${visited.join(', ') || 'None yet'}
+- NOT previously shown: ${previouslyShown.join(', ') || 'None yet'}
 
-${location.weather ? `Weather: ${location.weather.temperature}°C, ${location.weather.condition}` : ''}
+CRITICAL REQUIREMENTS:
+1. The new place MUST BE A REAL, EXISTING location in ${location.city}
+2. Do NOT suggest generic names - use actual place names that people can visit
+3. Match the original place's category and purpose
+4. Provide a 1-2 sentence reason why this is a good alternative
 
-CRITICAL JSON OUTPUT REQUIREMENTS - FOLLOW EXACTLY:
-1. Return ONLY valid JSON - no explanations, no markdown, no code blocks, no extra text
+${location.weather ? `\nCURRENT CONDITIONS: ${location.weather.temperature}°C, ${location.weather.condition}` : ''}
+
+CRITICAL JSON OUTPUT REQUIREMENTS:
+1. Return ONLY valid JSON - no text before/after
 2. Start with { and end with }
 3. Use double quotes for all strings
-4. Your ENTIRE response must be valid JSON
+4. NO markdown code blocks, NO explanations
 
-EXAMPLE OF CORRECT OUTPUT:
-{"new_place":"Place Name","description":"Reason here"}
-
-EXAMPLE OF WRONG OUTPUT (DO NOT DO THIS):
-Adding any text or code blocks before or after the JSON.
-Just return pure JSON with no formatting.
-
-Return ONLY this JSON (nothing else):
+REQUIRED JSON STRUCTURE:
 {
-  "new_place": "place name",
-  "description": "1-2 line reason"
+  "new_place": "Exact Name of Real Place in ${location.city}",
+  "description": "Why this is a good alternative"
 }
+
+Return ONLY the JSON object - nothing else.
 `;
 };
 

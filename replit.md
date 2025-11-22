@@ -70,6 +70,23 @@ TripGenie is an AI-powered travel planning application that helps users create p
 - ✅ All trip planning now using Groq's fast, free inference
 - ✅ Removed Google Generative AI dependency from code
 
+### Enhanced AI System Prompt & Shuffle Functionality (November 22, 2025)
+- ✅ **Improved AI System Prompt** with critical location constraints:
+  - Enforces location accuracy (all recommendations from destination city only)
+  - Fixed Patiala bug - now shows Patiala attractions, not Chandigarh
+  - Added explicit timing format requirements (e.g., "10 AM to 2 PM")
+  - Ensures unique lunch recommendations per day (no repeating restaurants)
+- ✅ **Functional Shuffle Backend**:
+  - `/api/ai/shuffle` endpoint fully working
+  - Shuffle buttons in Itinerary have onClick handlers with loading states
+  - Returns alternative places matching user interests and city constraints
+  - Enhanced shuffle prompt to emphasize real places from destination city
+- ✅ **Frontend Shuffle & Upvote Controls**:
+  - Added onClick handlers with loading states on Shuffle buttons
+  - Added onClick handlers on Upvote buttons
+  - "Shuffle Lunch Options" button randomizes restaurant display
+  - All buttons show pending state while processing
+
 ### Pages
 1. **Home** (`/`) - Trip planning input form with destination, budget, days, interests
 2. **Dashboard** (`/dashboard`) - Trip overview with destination, duration, budget cards

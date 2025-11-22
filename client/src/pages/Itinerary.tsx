@@ -13,7 +13,64 @@ const Itinerary = () => {
   const [attractions, setAttractions] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shufflingId, setShufflingId] = useState<number | null>(null);
+  const [upvotingId, setUpvotingId] = useState<number | null>(null);
   const { speak, stop, isSpeaking } = useTextToSpeech();
+
+  const handleShuffle = async (attraction: any, index: number) => {
+    try {
+      setShufflingId(index);
+      const response = await fetch("/api/ai/shuffle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          placeName: attraction.name,
+          placeType: attraction.type || "attraction",
+          location: { city: currentTrip?.destination || "Unknown" },
+          userPreferences: currentTrip?.interests || [],
+          visited: attractions.map(a => a.name),
+          previouslyShown: []
+        })
+      });
+      
+      if (!response.ok) throw new Error("Shuffle failed");
+      const data = await response.json();
+      
+      if (data.data?.new_place) {
+        setAttractions(prev => {
+          const updated = [...prev];
+          updated[index] = {
+            ...updated[index],
+            name: data.data.new_place,
+            description: data.data.description || updated[index].description
+          };
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Shuffle error:", error);
+      alert("Failed to shuffle place");
+    } finally {
+      setShufflingId(null);
+    }
+  };
+
+  const handleUpvote = async (attraction: any, index: number) => {
+    try {
+      setUpvotingId(index);
+      const response = await fetch(`/api/attractions/${index}/upvote`, {
+        method: "POST"
+      });
+      
+      if (!response.ok) throw new Error("Upvote failed");
+      alert("Thanks for upvoting!");
+    } catch (error) {
+      console.error("Upvote error:", error);
+      alert("Failed to upvote place");
+    } finally {
+      setUpvotingId(null);
+    }
+  };
 
   const mockAttractions = [
     { name: "Eiffel Tower", description: "Iconic iron lattice tower with stunning city views", timing: "Morning" },
@@ -167,13 +224,25 @@ const Itinerary = () => {
                             {attraction.description}
                           </p>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="gap-1">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => handleShuffle(attraction, idx)}
+                              disabled={shufflingId === idx}
+                            >
                               <Shuffle className="h-3 w-3" />
-                              Shuffle
+                              {shufflingId === idx ? "Shuffling..." : "Shuffle"}
                             </Button>
-                            <Button variant="outline" size="sm" className="gap-1">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => handleUpvote(attraction, idx)}
+                              disabled={upvotingId === idx}
+                            >
                               <ArrowUp className="h-3 w-3" />
-                              Upvote
+                              {upvotingId === idx ? "Upvoting..." : "Upvote"}
                             </Button>
                           </div>
                         </div>
@@ -207,7 +276,15 @@ const Itinerary = () => {
                       </div>
                     ))}
                   </div>
-                  <Button variant="outline" size="sm" className="mt-4 gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4 gap-1"
+                    onClick={() => {
+                      const newRestaurants = [...restaurants].sort(() => Math.random() - 0.5);
+                      setRestaurants(newRestaurants);
+                    }}
+                  >
                     <Shuffle className="h-3 w-3" />
                     Shuffle Lunch Options
                   </Button>
