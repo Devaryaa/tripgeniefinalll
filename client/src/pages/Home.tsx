@@ -106,6 +106,15 @@ const Home = () => {
       
       // Save the AI-generated plan to the trip
       if (aiPlan && aiPlan.days) {
+        // Helper function to extract timing enum from timing string
+        const extractTiming = (timingStr: string): "Morning" | "Afternoon" | "Evening" => {
+          const lower = timingStr.toLowerCase();
+          if (lower.includes("morning") || lower.includes("am") && parseInt(lower) < 12) return "Morning";
+          if (lower.includes("afternoon")) return "Afternoon";
+          if (lower.includes("evening") || lower.includes("pm")) return "Evening";
+          return "Morning"; // default
+        };
+
         // Save attractions and restaurants from AI plan
         for (const day of aiPlan.days) {
           for (const place of day.places || []) {
@@ -113,28 +122,38 @@ const Home = () => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
+                tripId: trip.id,
                 name: place.name,
                 description: place.description || "",
-                timing: place.timing || "Morning",
-                type: place.type || "attraction",
-                distance: place.distance || "",
-                transport: place.transport || "",
+                timing: extractTiming(place.timing || "Morning"),
+                rating: 4.5, // Default rating
+                reviews: 100, // Default reviews count
+                category: place.type || "attraction",
               }),
             });
           }
         }
 
         // Save restaurants/cafes
+        let cafeIndex = 0;
         for (const cafe of aiPlan.cafes || []) {
+          const day = Math.floor(cafeIndex / 2) + 1; // Distribute cafes across days
+          const mealType = cafeIndex % 2 === 0 ? "Lunch" : "Dinner";
           await fetch(`/api/trips/${trip.id}/restaurants`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: cafe.name || cafe,
+              tripId: trip.id,
+              name: typeof cafe === 'string' ? cafe : cafe.name,
               rating: cafe.rating || 4.5,
-              price: cafe.price || 500,
+              reviews: cafe.reviews || 100,
+              price: parseInt(cafe.price?.toString().replace(/[^0-9]/g, '') || '500'),
+              cuisine: cafe.cuisine || "Local",
+              day: day,
+              mealType: mealType,
             }),
           });
+          cafeIndex++;
         }
       }
 

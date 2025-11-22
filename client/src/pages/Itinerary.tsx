@@ -13,7 +13,20 @@ const Itinerary = () => {
   const [attractions, setAttractions] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { speak, stop, isSpeaking, isSupported } = useTextToSpeech();
+  const { speak, stop, isSpeaking } = useTextToSpeech();
+
+  const mockAttractions = [
+    { name: "Eiffel Tower", description: "Iconic iron lattice tower with stunning city views", timing: "Morning" },
+    { name: "Louvre Museum", description: "World's largest art museum and historic monument", timing: "Afternoon" },
+    { name: "Notre-Dame", description: "Medieval Catholic cathedral with Gothic architecture", timing: "Afternoon" },
+    { name: "Arc de Triomphe", description: "Monumental arch honoring French military victories", timing: "Evening" },
+  ];
+
+  const mockLunchSpots = [
+    { name: "Café de Flore", rating: 4.5, reviews: 2847, price: 35 },
+    { name: "Le Comptoir", rating: 4.7, reviews: 1923, price: 42 },
+    { name: "Chez L'Ami Jean", rating: 4.6, reviews: 1654, price: 38 },
+  ];
 
   useEffect(() => {
     if (currentTrip) {
@@ -76,19 +89,6 @@ const Itinerary = () => {
       </div>
     );
   }
-
-  const mockAttractions = [
-    { name: "Eiffel Tower", description: "Iconic iron lattice tower with stunning city views", timing: "Morning" },
-    { name: "Louvre Museum", description: "World's largest art museum and historic monument", timing: "Afternoon" },
-    { name: "Notre-Dame", description: "Medieval Catholic cathedral with Gothic architecture", timing: "Afternoon" },
-    { name: "Arc de Triomphe", description: "Monumental arch honoring French military victories", timing: "Evening" },
-  ];
-
-  const mockLunchSpots = [
-    { name: "Café de Flore", rating: 4.5, reviews: 2847, price: 35 },
-    { name: "Le Comptoir", rating: 4.7, reviews: 1923, price: 42 },
-    { name: "Chez L'Ami Jean", rating: 4.6, reviews: 1654, price: 38 },
-  ];
 
   return (
     <div className="min-h-[calc(100vh-8rem)] px-4 py-8">
@@ -232,7 +232,6 @@ const Itinerary = () => {
                 speak(itineraryText);
               }
             }}
-            disabled={!isSupported}
           >
             <Volume2 className="h-5 w-5" />
             {isSpeaking ? "Stop Speaking" : "Speak Itinerary Aloud"}
